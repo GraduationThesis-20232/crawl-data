@@ -1,0 +1,139 @@
+<!DOCTYPE html >
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>LawLaboratory</title>
+
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <meta content="Bootstrap 4 Template For Software Startups" name="description">
+    <meta content="Xiaoying Riley at 3rd Wave Media" name="author">
+<!--    <link href="favicon.ico" rel="shortcut icon">-->
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome JS-->
+    <script defer th:src="@{../assets/fontawesome/js/all.min.js}"></script>
+
+    <!-- Plugins CSS -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.2/styles/atom-one-dark.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{../assets/plugins/simplelightbox/simple-lightbox.min.css}">
+
+    <!-- Theme CSS -->
+    <link id="theme-style" rel="stylesheet" th:href="@{../assets/css/theme.css}">
+
+</head>
+
+<body class="docs-page">
+<header class="header fixed-top">
+    <div class="branding docs-branding">
+        <div class="container-fluid position-relative py-2">
+            <div class="docs-logo-wrapper">
+                <button class="docs-sidebar-toggler docs-sidebar-visible me-2 d-xl-none" id="docs-sidebar-toggler"
+                        type="button">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="site-logo">
+                    <a class="navbar-brand" href="/">
+                        <img alt="logo" class="logo-icon me-2" th:src="@{../assets/images/law_logo.png}">
+                        <span class="logo-text">Law<span class="text-alt">Laboratory</span></span>
+                    </a>
+                </div>
+            </div><!--//docs-logo-wrapper-->
+            <div class="docs-top-utilities d-flex justify-content-end align-items-center">
+                <div class="top-search-box d-none d-lg-flex" style="width: 400px;">
+                    <form class="search-form">
+                        <input class="form-control search-input" name="search" placeholder="Search the docs..."
+                               type="text">
+                        <button class="btn search-btn" type="button" value="Search"><i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <ul class="social-list list-inline mx-md-3 mx-lg-5 mb-0 d-none d-lg-flex">
+                    <li class="list-inline-item"><a href="#"><i class="fab fa-github fa-fw"></i></a></li>
+                    <li class="list-inline-item"><a href="#"><i class="fab fa-twitter fa-fw"></i></a></li>
+                    <li class="list-inline-item"><a href="#"><i class="fab fa-slack fa-fw"></i></a></li>
+                    <li class="list-inline-item"><a href="#"><i class="fab fa-product-hunt fa-fw"></i></a></li>
+                </ul><!--//social-list-->
+                <a class="btn btn-primary d-none d-lg-flex"
+                   href="">Download</a>
+            </div><!--//docs-top-utilities-->
+        </div><!--//container-->
+    </div><!--//branding-->
+</header><!--//header-->
+
+
+<div class="docs-wrapper">
+    <div class="docs-sidebar" id="docs-sidebar">
+        <div class="top-search-box d-lg-none p-3">
+            <form class="search-form">
+                <input class="form-control search-input" name="search" placeholder="Search the docs..." type="text">
+                <button class="btn search-btn" type="submit" value="Search"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+        <nav class="docs-nav navbar" id="docs-nav" th:each="c : ${chapters}">
+            <ul class="section-items list-unstyled nav flex-column pb-3" >
+                <li class="nav-item section-title mt-3">
+                    <a class="nav-link scrollto" th:href="${c.getName()}" th:text="${c.getName()}">
+                        <span class="theme-icon-holder me-2"><i class="fas fa-book-reader"></i></span>
+                    </a>
+                </li>
+                <li class="nav-item"><a class="nav-link scrollto" th:each="a : ${c.getArticles()}" th:text="${a.getName()}" th:href="${a.getName()}"></a></li>
+
+            </ul>
+
+        </nav><!--//docs-nav-->
+    </div><!--//docs-sidebar-->
+
+    <div class="docs-content">
+        <div class="container">
+            <header class="docs-header mt-4" style="text-align: center">
+                <h1 class="docs-heading" style="font-size: 46px; color: #28b76b" th:text="${name}"></h1>
+            </header>
+<!--            <article class="docs-article" th:each="p : ${parts}" th:id="${p.getName()}">-->
+<!--                <header class="docs-header">-->
+<!--                    <h2 class="docs-heading" th:text="${p.getName()}" style="font-size: 34px">-->
+<!--                        <span class="docs-time">-->
+<!--                            Last updated: 2019-06-01-->
+<!--                        </span>-->
+<!--                    </h2>-->
+<!--                </header>-->
+                <section class="docs-section" th:each="c : ${chapters}" th:id="${c.getName()}" >
+                    <h3 class="section-heading" th:text="${c.getName()}" style="font-size: 26px"></h3>
+                    <div th:each="a : ${c.getArticles()}" th:id="${a.getName()}">
+                        <h5 th:text="${a.getName()}"></h5>
+                        <ul>
+                            <li th:each="ln : ${a.getContent()}" th:text="${ln.toString()} ">
+                        </ul>
+                    </div>
+
+                </section><!--//section-->
+<!--            </article>-->
+        </div>
+    </div>
+</div><!--//docs-wrapper-->
+
+
+<!-- Javascript -->
+<script th:src="@{../assets/plugins/popper.min.js}"></script>
+<script th:src="@{../assets/plugins/bootstrap/js/bootstrap.min.js}"></script>
+
+
+<!-- Page Specific JS -->
+<script th:src="@{../assets/plugins/smoothscroll.min.js}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/highlight.min.js"></script>
+<script th:src="@{../assets/js/highlight-custom.js}"></script>
+<script th:src="@{../assets/plugins/simplelightbox/simple-lightbox.min.js}"></script>
+<script th:src="@{../assets/plugins/gumshoe/gumshoe.polyfills.min.js}"></script>
+<script th:src="@{../assets/js/docs.js}"></script>
+<script th:src="@{../assets/js/base.js}"></script>
+
+</body>
+</html>
+
