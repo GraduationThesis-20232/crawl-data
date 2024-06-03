@@ -10,6 +10,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import savetofile.DownloadFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class ConstitutionCrawler extends BaseWebCrawler {
+public class ConstitutionCrawler extends BaseWebCrawler implements DownloadFile {
     @Override
     public boolean connect() {
         File html = new File("src\\main\\resources\\data\\constitution\\Hienphapnam2013.html");
@@ -172,7 +173,8 @@ public class ConstitutionCrawler extends BaseWebCrawler {
         Elements tableInfo = document.select("#tomtat > div >  div.div-table > table > tbody");
 
         law.setIssuing_body(tableInfo.get(0).select("tr").get(0).select("td").get(1).text());
-        law.setIdentifier(tableInfo.get(0).select("tr").get(1).select("td").get(1).text());
+        String identifier = tableInfo.get(0).select("tr").get(1).select("td").get(1).text();
+        law.setIdentifier(identifier);
         law.setLegislation(tableInfo.get(0).select("tr").get(2).select("td").get(1).text());
 
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -182,7 +184,28 @@ public class ConstitutionCrawler extends BaseWebCrawler {
 
         law.setMinistries(tableInfo.get(0).select("tr").get(5).select("td").get(1).text());
 
+        downloadFile(document, identifier);
         StoreDocument.getInstance().save(law, "constitution");
+    }
+
+    public void downloadFile(Document document, String identifier)
+    {
+        try {
+            Element download = document.select("div#taive div.vn-doc div.section-content").first();
+            Elements links = download.select("a[href]");
+            for (Element link : links) {
+                String href = link.attr("href");
+                String title = link.attr("title");
+
+                if (title.contains("Word")) {
+                    download(href, identifier.replace("/", "_") + ".docx");
+                } else if (title.contains("PDF")) {
+                    download(href, identifier.replace("/", "_") + ".pdf");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws IOException, ParseException {

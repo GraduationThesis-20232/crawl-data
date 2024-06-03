@@ -1,6 +1,7 @@
 package crawler.documents;
 
 import crawler.BaseWebCrawler;
+import savetofile.DownloadFile;
 import database.documents.StoreDocument;
 import lawlaboratory.models.documents.Article;
 import lawlaboratory.models.documents.Chapter;
@@ -19,7 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class CodesCrawler extends BaseWebCrawler {
+public class CodesCrawler extends BaseWebCrawler implements DownloadFile {
 
     public CodesCrawler() {
     }
@@ -92,7 +93,8 @@ public class CodesCrawler extends BaseWebCrawler {
                 Elements tableInfo = document.select("#tomtat > div >  div.div-table > table > tbody");
 
                 law.setIssuing_body(tableInfo.get(0).select("tr").get(0).select("td").get(1).text());
-                law.setIdentifier(tableInfo.get(0).select("tr").get(1).select("td").get(1).text());
+                String identifier = tableInfo.get(0).select("tr").get(1).select("td").get(1).text();
+                law.setIdentifier(identifier);
                 law.setLegislation(tableInfo.get(0).select("tr").get(2).select("td").get(1).text());
 
                 DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -102,6 +104,7 @@ public class CodesCrawler extends BaseWebCrawler {
 
                 law.setMinistries(tableInfo.get(0).select("tr").get(5).select("td").get(1).text());
 
+                downloadFile(document, identifier);
                 StoreDocument.getInstance().save(law, "codes");
             }
         } catch (Exception e) {
@@ -398,6 +401,26 @@ public class CodesCrawler extends BaseWebCrawler {
         law.setChapters(chaptersObj);
 
         return law;
+    }
+
+    public void downloadFile(Document document, String identifier)
+    {
+        try {
+            Element download = document.select("div#taive div.vn-doc div.section-content").first();
+            Elements links = download.select("a[href]");
+            for (Element link : links) {
+                String href = link.attr("href");
+                String title = link.attr("title");
+
+                if (title.contains("Word")) {
+                    download(href, identifier.replace("/", "_") + ".docx");
+                } else if (title.contains("PDF")) {
+                    download(href, identifier.replace("/", "_") + ".pdf");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws IOException, ParseException {

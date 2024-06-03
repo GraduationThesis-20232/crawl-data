@@ -1,8 +1,11 @@
 package lawlaboratory.models.questions;
 
+import org.bson.types.ObjectId;
+
 import java.util.ArrayList;
 
 public class Question {
+    private ObjectId _id;
     private String title;
     private String description;
     private String date_answer;
@@ -16,6 +19,12 @@ public class Question {
     public Question() {
     }
 
+    public ObjectId getId(ObjectId _id) {
+        return _id;
+    }
+    public void setId(ObjectId id) {
+        this._id = id;
+    }
     public String getTitle() {
         return title;
     }
@@ -84,4 +93,6 @@ public class Question {
                 ", conclusion=" + conclusion +
                 '}';
     }
+
+
 }

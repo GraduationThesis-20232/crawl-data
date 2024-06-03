@@ -1,27 +1,33 @@
 package crawler.questions;
 
 import crawler.BaseWebCrawler;
-import database.questions.SaveQuestion;
+import database.questions.GetQuestion;
 import lawlaboratory.models.questions.Question;
 import lawlaboratory.models.questions.Quote;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import savetofile.QuestionJSONWriter;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 public class QuestionsCrawler extends BaseWebCrawler {
     private HashMap<String, String> url_date = new HashMap<>();
     private HashMap<String, String> url_field = new HashMap<>();
+    private String filePath = "";
+    private String dateAnswerNearest = GetQuestion.getInstance().getNearestDateAnswer("questions");
 
     @Override
     public boolean connect(){
@@ -42,15 +48,38 @@ public class QuestionsCrawler extends BaseWebCrawler {
     @Override
     public void start() throws IOException, ParseException {
         ArrayList<String> allUrlCodes = new ArrayList<>();
-        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/tai-nguyen-moi-truong");      //New model
+        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/ke-toan-kiem-toan");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/thue-phi-le-phi");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/dau-tu");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/dich-vu-phap-ly");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/tai-nguyen-moi-truong");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/cong-nghe-thong-tin");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/giao-duc");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/bo-may-hanh-chinh");
+//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/linh-vuc-khac");
+
+        String today = LocalDate.now().toString();
+        ArrayList<String> filePaths = new ArrayList<>();
+        filePaths.add("src/main/resources/data/questions/ketoan_kiemtoan_" + today + ".json");
+//        filePaths.add("src/main/resources/data/questions/thuephi_lephi_2024-06-01.json");
+//        filePaths.add("src/main/resources/data/questions/dautu_2024-06-01.json");
+//        filePaths.add("src/main/resources/data/questions/dichvu_phaply_2024-06-01.json");
+//        filePaths.add("src/main/resources/data/questions/tainguyen_moitruong_2024-06-01.json");
+//        filePaths.add("src/main/resources/data/questions/congnghe_thongtin_2024-06-01.json");
+//        filePaths.add("src/main/resources/data/questions/giaoduc_2024-06-01.json");
+//        filePaths.add("src/main/resources/data/questions/bomay_hanhchinh_2024-06-01.json");
+//        filePaths.add("src/main/resources/data/questions/linhvuckhac_2024-06-01.json");
+
 
         for (int i = 0; i < allUrlCodes.size(); i++) {
+            this.filePath = filePaths.get(i);
             setUrl(allUrlCodes.get(i));
             if (!connect()){
                 System.out.println("Kết nối thất bại");
                 System.exit(0);
             }
-            getDataAllQuestion(getAllUrlCodes());
+            ArrayList<String> listAllUrl = removeDuplicates(getAllUrlCodes());
+            getDataAllQuestion(listAllUrl);
         }
     }
 
@@ -65,7 +94,7 @@ public class QuestionsCrawler extends BaseWebCrawler {
 
                 if (document.getElementById("accordionMucLuc") != null){
                     getDataNewTemplate(document, question);
-                }else if (document.getElementById("news-detail") != null){
+                }else if (document.getElementById("news-content") != null){
                     getDataOldTemplate(document, question);
                 }else {
                     System.out.println("Die " + url);
@@ -76,7 +105,6 @@ public class QuestionsCrawler extends BaseWebCrawler {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
 
@@ -101,17 +129,49 @@ public class QuestionsCrawler extends BaseWebCrawler {
 
         url_date.clear(); url_field.clear();
         for (int i = 1; i <= numberPage; i++) {
+            System.out.println(i);
             String nextPageUrl = getUrl() + "?page=" + i;
 
-            Connection connection = Jsoup.connect(nextPageUrl);
-            document = connection.get();
+            int maxRetries = 5;
+            int retries = 0;
+            boolean success = false;
 
-            Elements articles  = document.select("section > article");
-            for (Element a : articles) {
-                allUrlCodes.add(a.select("a").attr("href"));
-                Date date = inputFormat.parse(a.select(".sub-time").text());
-                url_date.put(a.select("a").attr("href"), outputFormat.format(date));
-                url_field.put(a.select("a").attr("href"), a.select("div.keyword > a").text());
+            while (retries < maxRetries && !success) {
+                try {
+                    Connection connection = Jsoup.connect(nextPageUrl)
+                            .userAgent(HttpConnection.DEFAULT_UA)
+                            .timeout(5000);
+                    document = connection.get();
+
+                    success = true;
+                } catch (java.net.SocketTimeoutException e) {
+                    retries++;
+                    System.out.println("Read timed out, retrying... (" + retries + "/" + maxRetries + ")");
+                    if (retries >= maxRetries) {
+                        System.out.println("Failed after " + maxRetries + " attempts");
+                        e.printStackTrace();
+                    }
+                } catch (Exception e) {
+                    System.out.println("An error occurred: " + e.getMessage());
+                    e.printStackTrace();
+                    break;
+                }
+            }
+
+            if (success) {
+                Elements articles  = document.select("section > article");
+                for (Element a : articles) {
+                    allUrlCodes.add(a.select("a").attr("href"));
+                    Date date = inputFormat.parse(a.select(".sub-time").text());
+                    url_date.put(a.select("a").attr("href"), outputFormat.format(date));
+                    url_field.put(a.select("a").attr("href"), a.select("div.keyword > a").text());
+
+                    if (outputFormat.format(date).equals(dateAnswerNearest)){
+                        return allUrlCodes;
+                    }
+                }
+            } else {
+                System.out.println("Unable to retrieve the document.");
             }
         }
 
@@ -152,7 +212,8 @@ public class QuestionsCrawler extends BaseWebCrawler {
                 question.setQuote(quote);
                 question.setConclusion(conclusion);
 
-                SaveQuestion.getInstance().save(question, "temp");
+//                SaveQuestion.getInstance().save(question, "temp");
+                QuestionJSONWriter.saveToJSON(question, filePath);
 
                 contentQuotes.clear();
                 conclusion.clear();
@@ -164,7 +225,7 @@ public class QuestionsCrawler extends BaseWebCrawler {
     }
 
     public void getDataOldTemplate(Document document, Question question){
-        String questionTitle = document.getElementById("news-detail").firstElementChild().text();
+        String questionTitle = document.select("header > h1.h3.fw-bold.title").first().text();
 
         question.setTitle(questionTitle);
 
@@ -180,12 +241,18 @@ public class QuestionsCrawler extends BaseWebCrawler {
             }
         }
         question.setConclusion(conclusion);
-        SaveQuestion.getInstance().save(question, "temp");
+
+//        SaveQuestion.getInstance().save(question, "temp");
+        QuestionJSONWriter.saveToJSON(question, filePath);
+    }
+
+    public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list) {
+        HashSet<T> set = new HashSet<>(list);
+        return new ArrayList<>(set);
     }
 
     public static void main(String[] args) throws IOException, ParseException {
         QuestionsCrawler questionsCrawler = new QuestionsCrawler();
         questionsCrawler.start();
-
     }
 }
