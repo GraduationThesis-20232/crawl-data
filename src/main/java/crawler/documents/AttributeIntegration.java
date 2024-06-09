@@ -189,7 +189,12 @@ public class AttributeIntegration extends BaseWebCrawler {
 
             Element lastPage = document.select(".paging > a").last();
 
-            int numberPage = getNumberPages(lastPage.attr("href"));
+            int numberPage = 0;
+            if (lastPage == null) {
+                numberPage = 1;
+            } else {
+                numberPage = getNumberPages(lastPage.attr("href"));
+            }
 
             for (int i = 1; i <= numberPage; i++) {
                 String urlPage = "https://vbpl.vn/TW/Pages/vanban.aspx?idLoaiVanBan=17&dvid=13&Page=" + i;
@@ -228,6 +233,5 @@ public class AttributeIntegration extends BaseWebCrawler {
     public static void main(String[] args) throws IOException, ParseException {
         AttributeIntegration integration = new AttributeIntegration();
         integration.start();
-
     }
 }

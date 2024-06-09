@@ -32,4 +32,5 @@ public abstract class BaseWebCrawler {
     public abstract boolean connect();
 
     public abstract void start() throws IOException, ParseException;
+
 }

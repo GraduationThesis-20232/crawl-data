@@ -30,7 +30,7 @@ public class StoreDocument implements IServiceDatabase<Law> {
     @Override
     public synchronized void save(Law law, String collection) {
         try {
-            MongoDB mongoDB = new MongoDB("lawnew");
+            MongoDB mongoDB = new MongoDB("law_new");
 
             MongoDatabase database = mongoDB.getDatabase();
 

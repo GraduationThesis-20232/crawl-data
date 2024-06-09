@@ -1,6 +1,7 @@
 package crawler.documents;
 
 import crawler.BaseWebCrawler;
+import database.documents.GetDocument;
 import savetofile.DownloadFile;
 import database.documents.StoreDocument;
 import lawlaboratory.models.documents.Article;
@@ -12,6 +13,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import savetofile.LogCrawlManager;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class CodesCrawler extends BaseWebCrawler implements DownloadFile {
+    private int numberDocCrawled = 0;
 
     public CodesCrawler() {
     }
@@ -49,6 +52,7 @@ public class CodesCrawler extends BaseWebCrawler implements DownloadFile {
             System.exit(0);
         }
         getDataAllCodes(getAllUrlCodes());
+        LogCrawlManager.getInstance().logDocumentCrawled("Bộ luật", this.numberDocCrawled);
     }
 
     public ArrayList<String> getAllUrlCodes(){
@@ -59,7 +63,6 @@ public class CodesCrawler extends BaseWebCrawler implements DownloadFile {
 
         for (Element e: articles) {
             String url = "https://luatvietnam.vn" + e.attr("href");
-//            if (url.equals("https://luatvietnam.vn/lao-dong/bo-luat-lao-dong-2012-71731-d1.html")) break;
             allUrlCodes.add(url);
         }
 
@@ -104,8 +107,15 @@ public class CodesCrawler extends BaseWebCrawler implements DownloadFile {
 
                 law.setMinistries(tableInfo.get(0).select("tr").get(5).select("td").get(1).text());
 
-                downloadFile(document, identifier);
-                StoreDocument.getInstance().save(law, "codes");
+                Law checkExits = GetDocument.getInstance().getDocumentByIdentifier(identifier, "codes");
+
+                if (checkExits != null && checkExits.getIdentifier().equals(identifier)){
+                    break;
+                } else {
+                    downloadFile(document, identifier);
+                    StoreDocument.getInstance().save(law, "codes");
+                    this.numberDocCrawled++;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

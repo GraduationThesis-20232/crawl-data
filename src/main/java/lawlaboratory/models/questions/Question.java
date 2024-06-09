@@ -10,6 +10,7 @@ public class Question {
     private String description;
     private String date_answer;
     private String field;
+    private String source_url;
 
     private String reference;
     private Quote quote;
@@ -81,6 +82,14 @@ public class Question {
         this.field = field;
     }
 
+    public String getSource_url() {
+        return source_url;
+    }
+
+    public void setSource_url(String source_url) {
+        this.source_url = source_url;
+    }
+
     @Override
     public String toString() {
         return "Question{" +
@@ -88,6 +97,7 @@ public class Question {
                 ", description='" + description + '\'' +
                 ", date_answer='" + date_answer + '\'' +
                 ", field='" + field + '\'' +
+                ", source_url='" + source_url + '\'' +
                 ", reference='" + reference + '\'' +
                 ", quote=" + quote +
                 ", conclusion=" + conclusion +

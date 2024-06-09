@@ -21,7 +21,7 @@ public class GetDocument implements IServiceDatabase<Law> {
 
     @Override
     public Map<String, Law> getListData(String collection) {
-        MongoDB mongoDB = new MongoDB("lawnew");
+        MongoDB mongoDB = new MongoDB("lawlaboratory");
 
         MongoDatabase database = mongoDB.getDatabase();
 
@@ -48,7 +48,7 @@ public class GetDocument implements IServiceDatabase<Law> {
 
     @Override
     public Law getAData(String id, String collection) {
-        MongoDB mongoDB = new MongoDB("lawnew");
+        MongoDB mongoDB = new MongoDB("lawlaboratory");
         MongoDatabase database = mongoDB.getDatabase();
         MongoCollection<Document> lawMongoCollection = database.getCollection(collection);
 
@@ -82,7 +82,7 @@ public class GetDocument implements IServiceDatabase<Law> {
     }
 
     public Law getDocumentByIdentifier(String identifier, String collection) {
-        MongoDB mongoDB = new MongoDB("lawnew");
+        MongoDB mongoDB = new MongoDB("lawlaboratory");
         MongoDatabase database = mongoDB.getDatabase();
         MongoCollection<Document> lawMongoCollection = database.getCollection(collection);
 

@@ -1,6 +1,7 @@
 package crawler.documents;
 
 import crawler.BaseWebCrawler;
+import database.documents.GetDocument;
 import database.documents.StoreDocument;
 import lawlaboratory.models.documents.Article;
 import lawlaboratory.models.documents.Chapter;
@@ -12,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import savetofile.DownloadFile;
+import savetofile.LogCrawlManager;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class LawCrawler extends BaseWebCrawler implements DownloadFile {
+    private int numberDocCrawled = 0;
     @Override
     public boolean connect() {
         Document document = null;
@@ -45,6 +48,7 @@ public class LawCrawler extends BaseWebCrawler implements DownloadFile {
             System.exit(0);
         }
         getDataAllCodes(getAllUrlCodes());
+        LogCrawlManager.getInstance().logDocumentCrawled("Luật", numberDocCrawled);
     }
 
     public void getDataAllCodes(ArrayList<String> allUrlCodes) throws IOException, ParseException {
@@ -86,8 +90,15 @@ public class LawCrawler extends BaseWebCrawler implements DownloadFile {
                 law.setSource_url(url);
                 law.setEffect_status(1);
 
-                downloadFile(document, identifier);
-                StoreDocument.getInstance().save(law, "laws");
+                Law checkExits = GetDocument.getInstance().getDocumentByIdentifier(identifier, "laws");
+
+                if (checkExits != null && checkExits.getIdentifier().equals(identifier)){
+                    break;
+                } else {
+                    downloadFile(document, identifier);
+                    StoreDocument.getInstance().save(law, "laws");
+                    numberDocCrawled++;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

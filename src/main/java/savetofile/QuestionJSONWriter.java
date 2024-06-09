@@ -5,24 +5,35 @@ import com.google.gson.GsonBuilder;
 import lawlaboratory.models.questions.Question;
 
 import java.io.*;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
 
 public class QuestionJSONWriter {
+    public static QuestionJSONWriter getInstance() {
+        return new QuestionJSONWriter();
+    }
 
-    public static synchronized void saveToJSON(Question question, String filePath) {
+    public synchronized void saveToJSON(Question question, String fileName) {
         Gson gson = new GsonBuilder().create();
         String json = gson.toJson(question);
 
-        try (FileOutputStream fos = new FileOutputStream(filePath, true);
-             FileChannel fileChannel = fos.getChannel();
-             OutputStreamWriter osw = new OutputStreamWriter(fos);
-             PrintWriter out = new PrintWriter(osw)) {
+        String today = LocalDate.now().toString();
+        String directoryPath = "src/main/resources/data/questions/" + today;
+        String filePath = directoryPath + "/" + fileName;
 
-            try (FileLock lock = fileChannel.lock()) {
-                out.println(json);
-                out.flush();
+        try {
+            Path dirPath = Paths.get(directoryPath);
+            if (!Files.exists(dirPath)) {
+                Files.createDirectories(dirPath);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try (PrintWriter out = new PrintWriter(new FileWriter(filePath, true))){
+            out.println(json);
 
         } catch (IOException e) {
             e.printStackTrace();

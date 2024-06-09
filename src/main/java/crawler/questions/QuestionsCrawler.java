@@ -4,6 +4,7 @@ import crawler.BaseWebCrawler;
 import database.questions.GetQuestion;
 import lawlaboratory.models.questions.Question;
 import lawlaboratory.models.questions.Quote;
+import org.javatuples.Triplet;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -11,23 +12,25 @@ import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import savetofile.LogCrawlManager;
 import savetofile.QuestionJSONWriter;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class QuestionsCrawler extends BaseWebCrawler {
     private HashMap<String, String> url_date = new HashMap<>();
-    private HashMap<String, String> url_field = new HashMap<>();
+//    private HashMap<String, String> url_field = new HashMap<>();
     private String filePath = "";
-    private String dateAnswerNearest = GetQuestion.getInstance().getNearestDateAnswer("questions");
+    private final Date dateAnswerNearest = new SimpleDateFormat("yyyy-MM-dd").parse(GetQuestion.getInstance().getNearestDateAnswer("questions"));
+    private int numberQuestionCrawled = 0;
+    private String field = "";
+
+    public QuestionsCrawler() throws ParseException {
+    }
 
     @Override
     public boolean connect(){
@@ -47,39 +50,51 @@ public class QuestionsCrawler extends BaseWebCrawler {
 
     @Override
     public void start() throws IOException, ParseException {
-        ArrayList<String> allUrlCodes = new ArrayList<>();
-        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/ke-toan-kiem-toan");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/thue-phi-le-phi");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/dau-tu");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/dich-vu-phap-ly");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/tai-nguyen-moi-truong");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/cong-nghe-thong-tin");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/giao-duc");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/bo-may-hanh-chinh");
-//        allUrlCodes.add("https://thuvienphapluat.vn/hoi-dap-phap-luat/linh-vuc-khac");
+        String prefixUrl = "https://thuvienphapluat.vn/hoi-dap-phap-luat/";
+        ArrayList<Triplet<String, String, String>> url_file_field = new ArrayList<>();
 
-        String today = LocalDate.now().toString();
-        ArrayList<String> filePaths = new ArrayList<>();
-        filePaths.add("src/main/resources/data/questions/ketoan_kiemtoan_" + today + ".json");
-//        filePaths.add("src/main/resources/data/questions/thuephi_lephi_2024-06-01.json");
-//        filePaths.add("src/main/resources/data/questions/dautu_2024-06-01.json");
-//        filePaths.add("src/main/resources/data/questions/dichvu_phaply_2024-06-01.json");
-//        filePaths.add("src/main/resources/data/questions/tainguyen_moitruong_2024-06-01.json");
-//        filePaths.add("src/main/resources/data/questions/congnghe_thongtin_2024-06-01.json");
-//        filePaths.add("src/main/resources/data/questions/giaoduc_2024-06-01.json");
-//        filePaths.add("src/main/resources/data/questions/bomay_hanhchinh_2024-06-01.json");
-//        filePaths.add("src/main/resources/data/questions/linhvuckhac_2024-06-01.json");
+        url_file_field.add(new Triplet<>( prefixUrl + "tien-te-ngan-hang", "tiente_nganhang.json", "Tiền tệ - Ngân hàng"));
+        url_file_field.add(new Triplet<>( prefixUrl + "quyen-dan-su", "quyendansu.json", "Quyền dân sự"));
+        url_file_field.add(new Triplet<>( prefixUrl + "chung-khoan", "chungkhoan.json", "Chứng khoán"));
+        url_file_field.add(new Triplet<>( prefixUrl + "so-huu-tri-tue", "sohuutritue.json", "Sở hữu trí tuệ"));
+        url_file_field.add(new Triplet<>( prefixUrl + "tai-chinh-nha-nuoc", "taichinh_nhanuoc.json", "Tài chính nhà nước"));
+        url_file_field.add(new Triplet<>( prefixUrl + "thu-tuc-to-tung", "thutuc_totung.json", "Thủ tục tố tụng"));
+        url_file_field.add(new Triplet<>( prefixUrl + "the-thao-y-te", "thethao_yte.json", "Thể thao - Y tế"));
+        url_file_field.add(new Triplet<>( prefixUrl + "giao-thong-van-tai", "giaothong_vantai.json", "Giao thông vận tải"));
+        url_file_field.add(new Triplet<>( prefixUrl + "xuat-nhap-khau", "xuatnhapkhau.json", "Xuất nhập khẩu"));
 
+        url_file_field.add(new Triplet<>( prefixUrl + "doanh-nghiep", "doanhnghiep.json", "Doanh nghiệp"));
+        url_file_field.add(new Triplet<>( prefixUrl + "lao-dong-tien-luong", "laodong_tienluong.json", "Lao động - Tiền lương"));
+        url_file_field.add(new Triplet<>( prefixUrl + "bat-dong-san", "batdongsan.json", "Bất động sản"));
+        url_file_field.add(new Triplet<>( prefixUrl + "vi-pham-hanh-chinh", "vipham_hanhchinh.json", "Vi phạm hành chính"));
+        url_file_field.add(new Triplet<>( prefixUrl + "bao-hiem", "baohiem.json", "Bảo hiểm"));
+        url_file_field.add(new Triplet<>( prefixUrl + "van-hoa-xa-hoi", "vanhoa_xahoi.json", "Văn hóa - Xã hội"));
+        url_file_field.add(new Triplet<>( prefixUrl + "thuong-mai", "thuongmai.json", "Thương mại"));
+        url_file_field.add(new Triplet<>( prefixUrl + "trach-nhiem-hinh-su", "trachnhiem_hinhsu.json", "Trách nhiệm hình sự"));
+        url_file_field.add(new Triplet<>( prefixUrl + "xay-dung-do-thi", "xaydung_dothi.json", "Xây dựng - Đô thị"));
 
-        for (int i = 0; i < allUrlCodes.size(); i++) {
-            this.filePath = filePaths.get(i);
-            setUrl(allUrlCodes.get(i));
-            if (!connect()){
+        url_file_field.add(new Triplet<>( prefixUrl + "ke-toan-kiem-toan", "ketoan_kiemtoan.json", "Kế toán - Kiểm toán"));
+        url_file_field.add(new Triplet<>( prefixUrl + "thue-phi-le-phi", "thuephi_lephi.json", "Thuế - Phí - Lệ phí"));
+        url_file_field.add(new Triplet<>( prefixUrl + "dau-tu", "dautu.json", "Đầu tư"));
+        url_file_field.add(new Triplet<>( prefixUrl + "dich-vu-phap-ly", "dichvu_phaply.json", "Dịch vụ pháp lý"));
+        url_file_field.add(new Triplet<>( prefixUrl + "tai-nguyen-moi-truong", "tainguyen_moitruong.json", "Tài nguyên - Môi trường"));
+        url_file_field.add(new Triplet<>( prefixUrl + "cong-nghe-thong-tin", "congnghe_thongtin.json", "Công nghệ thông tin"));
+        url_file_field.add(new Triplet<>( prefixUrl + "giao-duc", "giaoduc.json", "Giáo dục"));
+        url_file_field.add(new Triplet<>( prefixUrl + "bo-may-hanh-chinh", "bomay_hanhchinh.json", "Bộ máy hành chính"));
+//        url_file_field.add(new Triplet<>( prefixUrl + "linh-vuc-khac", "linhvuckhac.json", "Lĩnh vực khác"));
+
+        for (Triplet<String, String, String> uff : url_file_field) {
+            this.numberQuestionCrawled = 0;
+            setUrl(uff.getValue0());
+            this.filePath = uff.getValue1();
+            this.field = uff.getValue2();
+            if (!connect()) {
                 System.out.println("Kết nối thất bại");
                 System.exit(0);
             }
             ArrayList<String> listAllUrl = removeDuplicates(getAllUrlCodes());
             getDataAllQuestion(listAllUrl);
+            LogCrawlManager.getInstance().logQuestionsCrawled(this.filePath, this.numberQuestionCrawled, this.field);
         }
     }
 
@@ -90,7 +105,9 @@ public class QuestionsCrawler extends BaseWebCrawler {
                 Document document = connection.get();
                 Question question = new Question();
                 question.setDate_answer(url_date.get(url));
-                question.setField(url_field.get(url));
+                question.setSource_url(url);
+//                question.setField(url_field.get(url));
+                question.setField(this.field);
 
                 if (document.getElementById("accordionMucLuc") != null){
                     getDataNewTemplate(document, question);
@@ -127,9 +144,11 @@ public class QuestionsCrawler extends BaseWebCrawler {
             System.out.println("Invalid number format");
         }
 
-        url_date.clear(); url_field.clear();
+        url_date.clear();
+//        url_field.clear();
         for (int i = 1; i <= numberPage; i++) {
             System.out.println(i);
+            if(i == 10) break;
             String nextPageUrl = getUrl() + "?page=" + i;
 
             int maxRetries = 5;
@@ -161,14 +180,14 @@ public class QuestionsCrawler extends BaseWebCrawler {
             if (success) {
                 Elements articles  = document.select("section > article");
                 for (Element a : articles) {
-                    allUrlCodes.add(a.select("a").attr("href"));
                     Date date = inputFormat.parse(a.select(".sub-time").text());
-                    url_date.put(a.select("a").attr("href"), outputFormat.format(date));
-                    url_field.put(a.select("a").attr("href"), a.select("div.keyword > a").text());
-
-                    if (outputFormat.format(date).equals(dateAnswerNearest)){
-                        return allUrlCodes;
+                    if (date.before(dateAnswerNearest)){
+                        continue;
                     }
+
+                    allUrlCodes.add(a.select("a").attr("href"));
+                    url_date.put(a.select("a").attr("href"), outputFormat.format(date));
+//                    url_field.put(a.select("a").attr("href"), a.select("div.keyword > a").text());
                 }
             } else {
                 System.out.println("Unable to retrieve the document.");
@@ -213,7 +232,8 @@ public class QuestionsCrawler extends BaseWebCrawler {
                 question.setConclusion(conclusion);
 
 //                SaveQuestion.getInstance().save(question, "temp");
-                QuestionJSONWriter.saveToJSON(question, filePath);
+                QuestionJSONWriter.getInstance().saveToJSON(question, filePath);
+                this.numberQuestionCrawled++;
 
                 contentQuotes.clear();
                 conclusion.clear();
@@ -243,7 +263,8 @@ public class QuestionsCrawler extends BaseWebCrawler {
         question.setConclusion(conclusion);
 
 //        SaveQuestion.getInstance().save(question, "temp");
-        QuestionJSONWriter.saveToJSON(question, filePath);
+        QuestionJSONWriter.getInstance().saveToJSON(question, filePath);
+        this.numberQuestionCrawled++;
     }
 
     public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list) {

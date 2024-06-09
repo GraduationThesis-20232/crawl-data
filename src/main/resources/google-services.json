@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "297335608968",
+    "project_id": "lawlaboratory2024",
+    "storage_bucket": "lawlaboratory2024.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:297335608968:android:df41f9cd7e81680636313d",
+        "android_client_info": {
+          "package_name": "com.hust.soict"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "297335608968-hfilp6ikrct11s63fuauc3t8rq1fdam3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-dvM-iYh1x6a-oZ0pgkr12B0viLBoloo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "297335608968-hfilp6ikrct11s63fuauc3t8rq1fdam3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
