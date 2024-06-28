@@ -2,13 +2,18 @@ package savetofile;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import lawlaboratory.models.questions.Question;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class QuestionJSONWriter {
     public static QuestionJSONWriter getInstance() {
@@ -38,6 +43,27 @@ public class QuestionJSONWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public synchronized List<Question> readQuestionsFromJson(String filePath) throws FileNotFoundException {
+        List<Question> questions = new ArrayList<>();
+        Gson gson = new Gson();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                try {
+                    Question question = gson.fromJson(line, Question.class);
+                    questions.add(question);
+                } catch (JsonSyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return questions;
     }
 }
 

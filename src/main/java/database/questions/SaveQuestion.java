@@ -9,6 +9,8 @@ import database.IServiceDatabase;
 import lawlaboratory.models.questions.Question;
 import org.bson.Document;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class SaveQuestion implements IServiceDatabase<Question> {
@@ -39,6 +41,25 @@ public class SaveQuestion implements IServiceDatabase<Question> {
         org.bson.Document document = org.bson.Document.parse(json);
 
         lawMongoCollection.insertOne(document);
+
+        mongoDB.closeConnection();
+    }
+
+    public synchronized void save(List<Question> questions, String collection) {
+        MongoDB mongoDB = new MongoDB("lawlaboratory");
+
+        MongoDatabase database = mongoDB.getDatabase();
+
+        MongoCollection<Document> lawMongoCollection = database.getCollection(collection);
+
+        Gson gson = new GsonBuilder().create();
+        List<Document> documents = new ArrayList<>();
+        for (Question question : questions) {
+            String json = gson.toJson(question);
+            Document document = Document.parse(json);
+            documents.add(document);
+        }
+        lawMongoCollection.insertMany(documents);
 
         mongoDB.closeConnection();
     }

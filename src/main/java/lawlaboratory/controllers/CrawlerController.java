@@ -7,17 +7,28 @@ import crawler.documents.CodesCrawler;
 import crawler.documents.ConstitutionCrawler;
 import crawler.documents.LawCrawler;
 import crawler.questions.QuestionsCrawler;
+import database.questions.GetQuestion;
+import database.questions.SaveQuestion;
+import lawlaboratory.models.questions.Question;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import savetofile.LogCrawlManager;
+import savetofile.QuestionJSONWriter;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 public class CrawlerController {
@@ -180,6 +191,31 @@ public class CrawlerController {
 
             Gson gson = new Gson();
             return ResponseEntity.ok(gson.toJson(responseLogs));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/import/questions")
+    public ResponseEntity<String> importToDatabase() {
+        try {
+            String fileLogNearest = LogCrawlManager.getInstance().findNearestLogFile("src/main/resources/data/questions/log");
+
+            String date = fileLogNearest.substring(0, 10);
+            String directoryPath = "src/main/resources/data/questions/" + date;
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(directoryPath), "*.json")) {
+                for (Path entry : stream) {
+                    List<Question> questions = QuestionJSONWriter.getInstance().readQuestionsFromJson(entry.toString());
+                    SaveQuestion.getInstance().save(questions, "test_import");
+                }
+            }
+
+            Gson gson = new Gson();
+            JsonObject response = new JsonObject();
+            response.addProperty("status", "DONE");
+            response.addProperty("message", "Import questions to database done.");
+
+            return ResponseEntity.ok(gson.toJson(response));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }

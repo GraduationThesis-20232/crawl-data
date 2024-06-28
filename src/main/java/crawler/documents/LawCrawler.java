@@ -42,7 +42,9 @@ public class LawCrawler extends BaseWebCrawler implements DownloadFile {
 
     @Override
     public void start() throws IOException, ParseException {
-        setUrl("https://luatvietnam.vn/van-ban-luat-viet-nam.html?OrderBy=0&keywords=&lFieldId=&EffectStatusId=0&DocTypeId=10&OrganId=0&pSize=50&ShowSapo=0&page=1");
+//        setUrl("https://luatvietnam.vn/van-ban-luat-viet-nam.html?OrderBy=0&keywords=&lFieldId=&EffectStatusId=0&DocTypeId=10&OrganId=0&pSize=50&ShowSapo=0&page=1");
+//        setUrl("https://luatvietnam.vn/van-ban-luat-viet-nam.html?OrderBy=0&keywords=&lFieldId=&EffectStatusId=0&DocTypeId=11&OrganId=0&page=1&pSize=50&ShowSapo=0");
+        setUrl("https://luatvietnam.vn/van-ban-luat-viet-nam.html?OrderBy=0&keywords=&lFieldId=&EffectStatusId=0&DocTypeId=14&OrganId=0&page=1&pSize=20&ShowSapo=0");
         if (!connect()){
             System.out.println("Kết nối thất bại");
             System.exit(0);
@@ -54,7 +56,7 @@ public class LawCrawler extends BaseWebCrawler implements DownloadFile {
     public void getDataAllCodes(ArrayList<String> allUrlCodes) throws IOException, ParseException {
         try {
             for (String url : allUrlCodes) {
-
+                System.out.println(url);
                 Connection connection = Jsoup.connect(url);
                 Document document = connection.get();
 
@@ -188,9 +190,11 @@ public class LawCrawler extends BaseWebCrawler implements DownloadFile {
                         ArrayList<String> tmp = new ArrayList<>();
                         Element temp = contentArticle.last().nextElementSibling();
                         do {
-                            tmp.add(temp.text());
-                            temp = temp.nextElementSibling();
-                        }while (temp.is(".docitem-11, .docitem-12"));
+                            if (temp != null) {
+                                tmp.add(temp.text());
+                                temp = temp.nextElementSibling();
+                            }
+                        }while (temp != null && temp.is(".docitem-11, .docitem-12"));
                         articlesContent.add(tmp);
                     }
 
@@ -371,9 +375,11 @@ public class LawCrawler extends BaseWebCrawler implements DownloadFile {
                         Element temp = articlesEle.last().nextElementSibling();
 
                         do {
-                            tmp.add(temp.text());
-                            temp = temp.nextElementSibling();
-                        }while (temp.is(".docitem-11, .docitem-12"));
+                            if (temp != null) {
+                                tmp.add(temp.text());
+                                temp = temp.nextElementSibling();
+                            }
+                        }while (temp != null && temp.is(".docitem-11, .docitem-12"));
                         articlesContent.add(tmp);
                     }
                 }
@@ -456,8 +462,10 @@ public class LawCrawler extends BaseWebCrawler implements DownloadFile {
                     Element temp = articlesEle.last().nextElementSibling();
 
                     do {
-                        tmp.add(temp.text());
-                        temp = temp.nextElementSibling();
+                        if (temp != null) {
+                            tmp.add(temp.text());
+                            temp = temp.nextElementSibling();
+                        }
                     }while (temp != null && temp.is(".docitem-11, .docitem-12"));
                     articlesContent.add(tmp);
                 }
